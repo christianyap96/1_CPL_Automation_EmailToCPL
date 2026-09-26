@@ -1,6 +1,6 @@
 # Email to SharePoint — Power Automate Flow
 
-![Power Automate Template](https://make.powerautomate.com/environments/Default-70ebe3a3-5b30-435d-9d67-7716d74ca190/flows/b6edeefa-0669-4a20-b160-a098349b64d2?v3=true)
+Power Automate Template: (https://make.powerautomate.com/environments/Default-70ebe3a3-5b30-435d-9d67-7716d74ca190/flows/b6edeefa-0669-4a20-b160-a098349b64d2?v3=true)
 
 A Power Automate cloud flow that watches an Outlook mailbox and automatically saves incoming content to a SharePoint document library:
 
