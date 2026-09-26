@@ -1,0 +1,102 @@
+{
+  "_note": "Reference only. Mirrors the designer's code view for readability. Export a package from Power Automate for an importable copy. Replace placeholder values.",
+  "triggers": {
+    "When_a_new_email_arrives_(V3)": {
+      "type": "OpenApiConnectionNotification",
+      "inputs": {
+        "host": {
+          "connectionName": "shared_office365",
+          "operationId": "OnNewEmailV3",
+          "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+        },
+        "parameters": {
+          "folderPath": "<YOUR OUTLOOK FOLDER ID>",
+          "importance": "Any",
+          "fetchOnlyWithAttachment": false,
+          "includeAttachments": true,
+          "subjectFilter": "Weekly Report"
+        }
+      }
+    }
+  },
+  "actions": {
+    "Condition": {
+      "type": "If",
+      "expression": {
+        "and": [
+          { "contains": ["@triggerOutputs()?['body/from']", "@yourcompany.com"] }
+        ]
+      },
+      "actions": {
+        "Condition_2": {
+          "type": "If",
+          "expression": {
+            "and": [
+              { "equals": ["@triggerOutputs()?['body/hasAttachments']", true] }
+            ]
+          },
+          "actions": {
+            "For_each_1": {
+              "type": "Foreach",
+              "foreach": "@triggerOutputs()?['body/attachments']",
+              "actions": {
+                "Get_Attachment_(V2)": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_office365",
+                      "operationId": "GetAttachment_V2",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                    },
+                    "parameters": {
+                      "messageId": "@triggerOutputs()?['body/id']",
+                      "attachmentId": "@items('For_each_1')?['id']"
+                    }
+                  }
+                },
+                "Create_file": {
+                  "type": "OpenApiConnection",
+                  "runAfter": { "Get_Attachment_(V2)": ["Succeeded"] },
+                  "inputs": {
+                    "host": {
+                      "connectionName": "shared_sharepointonline",
+                      "operationId": "CreateFile",
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    },
+                    "parameters": {
+                      "dataset": "https://YOURTENANT.sharepoint.com/sites/YOURSITE",
+                      "folderPath": "/<PROJECT>/Deliverables/Weekly Activity Report",
+                      "name": "Weekly Report - @{items('For_each_1')?['name']}",
+                      "body": "@body('Get_Attachment_(V2)')?['contentBytes']"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "else": {
+            "actions": {
+              "Create_file_1": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "host": {
+                    "connectionName": "shared_sharepointonline",
+                    "operationId": "CreateFile",
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                  },
+                  "parameters": {
+                    "dataset": "https://YOURTENANT.sharepoint.com/sites/YOURSITE",
+                    "folderPath": "/<PROJECT>/Deliverables/Weekly Activity Report",
+                    "name": "@{triggerOutputs()?['body/subject']}_@{formatDateTime(triggerOutputs()?['body/receivedDateTime'], 'yyyy-MM-dd')}.html",
+                    "body": "@triggerOutputs()?['body/body']"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "else": { "actions": {} }
+    }
+  }
+}
